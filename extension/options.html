@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Brinky settings</title>
+<link rel="stylesheet" href="popup.css">
+<style>
+  html,body{width:auto}
+  body{font-size:14px;min-height:100vh}
+  .wrap{max-width:920px;margin:0 auto;padding:32px 24px 72px;display:grid;grid-template-columns:210px minmax(0,1fr);gap:32px;align-items:start}
+  aside{position:sticky;top:28px;display:flex;flex-direction:column;gap:18px}
+  .brand{display:flex;align-items:center;gap:10px}
+  .brand img{width:58px;height:auto}
+  .brand b{display:block;font-size:17px;letter-spacing:-.2px}
+  .brand small{color:var(--mut);font-size:12px}
+  nav{display:flex;flex-direction:column;gap:4px}
+  nav button{all:unset;cursor:pointer;padding:10px 12px;border-radius:12px;font-weight:650;font-size:13.5px;color:var(--mut);display:flex;flex-direction:column;gap:1px}
+  nav button small{font-weight:500;font-size:11.5px}
+  nav button:hover{background:var(--card2);color:var(--fg)}
+  nav button[aria-current="page"]{background:var(--card);color:var(--fg);box-shadow:var(--shadow);border:1px solid var(--line)}
+  nav button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  .saved{align-self:flex-start}
+  main{min-width:0}
+  .page{display:flex;flex-direction:column;gap:22px}
+  .sec h2{font-size:12px}
+  .sec .desc{font-size:12.5px}
+  .f{padding:12px 16px;min-height:52px}
+  .f .lb b{font-size:13.5px}
+  .f .lb small{font-size:12px}
+  .superhead .list{border-color:color-mix(in srgb,var(--water) 40%,var(--line))}
+  .superhead .f{padding:16px}
+  .superhead .lb b{font-size:15px}
+  .namein{width:180px}
+  textarea{min-height:76px;font-size:12.5px}
+  .foot{margin-top:4px}
+  @media (max-width:720px){
+    .wrap{grid-template-columns:1fr;gap:18px;padding:20px 16px 56px}
+    aside{position:static}
+    nav{flex-direction:row}
+    nav button{flex:1;text-align:center;align-items:center}
+    nav button small{display:none}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <aside>
+    <div class="brand"><span id="buddy"></span><div><b>Brinky settings</b><small>Blink &amp; Drink breaks</small></div></div>
+    <nav aria-label="Settings pages">
+      <button data-page="basics"><span>Basics</span><small>What most people change</small></button>
+      <button data-page="super"><span>SuperBrink</span><small>Every detail, for tinkerers</small></button>
+    </nav>
+    <span class="saved" id="saved" aria-live="polite">Saved</span>
+  </aside>
+  <main id="main"></main>
+</div>
+<script src="mascot.js"></script>
+<script type="module" src="options.js"></script>
+</body>
+</html>

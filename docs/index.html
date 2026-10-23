@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Brinky: eye breaks, water and movement for Chrome</title>
+<meta name="description" content="Brinky is a free Chrome extension for eye breaks, water, movement and posture. It has three modes, waits for a natural pause and stays quiet during calls.">
+<meta name="theme-color" content="#F4F6F8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0B1620" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="assets/icon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="assets/icon-180.png">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Brinky: blink, drink, stay in flow">
+<meta property="og:description" content="Eye breaks, water, movement and posture for Chrome. It waits for a natural pause and stays quiet during calls. Free.">
+<meta property="og:image" content="assets/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preload" href="assets/fonts/newsreader.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/site.css">
+<script>document.documentElement.classList.add("js")</script>
+</head>
+<body>
+<a class="skip" href="#content">Skip to content</a>
+
+<header class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="#" data-home aria-label="Brinky home"><img src="assets/icon-32.png" alt="" width="26" height="26"><span>Brinky</span></a>
+    <nav aria-label="Main">
+      <a class="nav-x" href="#modes">How it works</a>
+      <a class="nav-x" href="#install">Install</a>
+      <a class="nav-x" href="#faq">Questions</a>
+      <a class="nav-bd" href="#blink-drink">blink.drink.</a>
+      <a class="btn primary sm" href="download/brinky.zip" download data-download>Download</a>
+    </nav>
+  </div>
+</header>
+
+<div id="content">
+<!-- ═════════════ home ═════════════ -->
+<main class="view" data-view="home">
+
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="wrap hero-in">
+      <div class="hero-copy">
+        <h1 id="hero-title">Blink. Drink.<br>Stay in flow.</h1>
+        <p class="lede">Brinky is a Chrome extension that looks after your eyes, your water and your posture while you work, and knows when to leave you alone.</p>
+        <div class="ctas">
+          <a class="btn primary" href="download/brinky.zip" download data-download data-main-cta>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg>
+            <span>Download Brinky</span>
+          </a>
+          <button class="btn quiet" type="button" data-try>Try a 20-second break</button>
+        </div>
+        <p class="fine">Free, with no account and no tracking. Works in Chrome, Edge, Brave and Arc.</p>
+        <p class="bnote" id="bnote" hidden></p>
+      </div>
+
+      <figure class="shot-hero" aria-label="Brinky's break screen in a browser tab, with a water card and a posture note">
+        <div class="win" aria-hidden="true">
+          <div class="win-bar"><i></i><i></i><i></i><span class="win-url">notes.app/quarterly-plan</span></div>
+          <div class="win-page">
+            <div class="doc">
+              <b>Quarterly plan</b>
+              <p>The first thing we learned from the pilot is that people don't need more reminders. They need fewer, better timed ones. Most of the requests we heard were about the moment a reminder arrives, not how often.</p>
+              <p>For the next quarter we'll focus on three things: onboarding, the weekly summary, and the way the app behaves during calls. Each of these has an owner and a date in the table below.</p>
+              <p>We'll review progress every second Thursday. If something slips, we'd rather move the date than cut the scope.</p>
+            </div>
+            <div class="win-break">
+              <div class="ringbox">
+                <svg viewBox="0 0 220 220"><circle cx="110" cy="110" r="100" class="trk"/><circle cx="110" cy="110" r="100" class="bar" style="stroke-dasharray:628.3;stroke-dashoffset:188.5"/></svg>
+                <img src="assets/brinky/calm.webp" alt="" width="300" height="252">
+              </div>
+              <div class="wb-time">0:14</div>
+              <div class="wb-msg">Look at something far away.</div>
+              <div class="wb-btn">Hold to skip</div>
+            </div>
+          </div>
+        </div>
+        <div class="float sip" aria-hidden="true">
+          <img src="assets/brinky/excited.webp" alt="" width="300" height="252">
+          <div>
+            <b>Sip o'clock</b>
+            <span class="dots"><i class="f"></i><i class="f"></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+            <small>Glass 3 of 8 today</small>
+            <span class="sip-btns"><em>I drank a glass</em><em class="o">In 10 min</em></span>
+          </div>
+        </div>
+        <div class="float note" aria-hidden="true">
+          <img src="assets/brinky/proud.webp" alt="" width="300" height="252">
+          <span>Posture check: sit tall, shoulders down.</span>
+          <svg class="cursor" viewBox="0 0 16 22"><path d="M1 1v17l4.6-4.3 3 6.8 3-1.3-3-6.6H15z"/></svg>
+        </div>
+      </figure>
+    </div>
+  </section>
+
+  <section class="sec modes" id="modes" aria-labelledby="modes-title">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 id="modes-title">Not another <span class="nowrap">20-20-20</span> timer</h2>
+        <p class="sec-lede">The 20-20-20 rule is where Brinky starts, not where it stops. Pick the rhythm that fits your work, and Brinky fits eye breaks, water, movement and posture around it.</p>
+      </div>
+
+      <div class="tabs" role="tablist" aria-label="Brinky's modes">
+        <button role="tab" id="tab-rec" aria-controls="mode-panel" aria-selected="true" data-mode="rec"><b>Recommended</b><small>Works out of the box</small></button>
+        <button role="tab" id="tab-work" aria-controls="mode-panel" aria-selected="false" tabindex="-1" data-mode="work"><b>Work mode</b><small>Long focus, real breaks</small></button>
+        <button role="tab" id="tab-super" aria-controls="mode-panel" aria-selected="false" tabindex="-1" data-mode="super"><b>SuperBrink</b><small>Every timing is yours</small></button>
+      </div>
+
+      <div class="panel" id="mode-panel" role="tabpanel" aria-labelledby="tab-rec">
+        <div class="panel-top">
+          <p class="mode-desc" id="modeDesc"></p>
+          <div class="mode-ctrl" id="modeCtrl"></div>
+        </div>
+        <div class="rb" id="ribbon" role="img" aria-label=""></div>
+        <p class="rb-sum" id="rbSum" aria-live="polite"></p>
+        <dl class="legend" id="legend"></dl>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec waits" id="waits" aria-labelledby="waits-title">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 id="waits-title">It knows when to wait</h2>
+        <p class="sec-lede">A reminder that lands mid-sentence gets dismissed, and soon they all do. So before it interrupts, Brinky checks what you're doing.</p>
+      </div>
+      <ul class="waits-list">
+        <li><b>Mid-sentence</b><span>If you're typing, the break waits for a pause, up to 30 seconds.</span></li>
+        <li><b>On a call</b><span>While any tab uses your camera or microphone, or shares your screen, Brinky stays quiet. After a call of 30 minutes or more, it offers a break.</span></li>
+        <li><b>Watching or presenting</b><span>Videos and fullscreen are left alone.</span></li>
+        <li><b>Away from your desk</b><span>Nothing starts on a locked screen. Three minutes away counts as rest, so you don't come back to a break.</span></li>
+        <li><b>In another app</b><span>You get a system notification instead of an overlay you'd never see.</span></li>
+        <li><b>Not right now</b><span>Snooze for 5 minutes, twice. Skipping takes a press-and-hold, so a reflex click can't throw a break away.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="sec install" id="install" aria-labelledby="install-title">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 id="install-title">Install in about a minute</h2>
+        <p class="sec-lede">Brinky isn't in the Chrome Web Store yet, so you add it from a folder. It's four steps, and you only do it once.</p>
+        <p class="started" id="started" role="status">Your download has started. Here's what to do with it.</p>
+      </div>
+      <ol class="steps">
+        <li>
+          <h3>Download and unzip</h3>
+          <p><a href="download/brinky.zip" download data-download>Download brinky.zip</a> and unzip it into a folder you'll keep, like <b>Documents/Brinky</b>. Your browser runs Brinky from there, so leave it in place.</p>
+          <div class="mock" aria-hidden="true"><span class="zip"></span><span><b class="ui">brinky.zip</b><small>313 KB</small></span></div>
+        </li>
+        <li>
+          <h3>Open your extensions</h3>
+          <p>Copy this address, paste it into the address bar and press Enter. Websites aren't allowed to open it for you.</p>
+          <div class="mock"><code class="url" data-ext-url>chrome://extensions</code><button class="copy" type="button" data-copy>Copy</button></div>
+        </li>
+        <li>
+          <h3>Turn on Developer mode</h3>
+          <p data-devmode>It's the switch in the top-right corner of the Extensions page.</p>
+          <div class="mock" aria-hidden="true"><span class="ui">Developer mode</span><span class="toggle"></span></div>
+        </li>
+        <li>
+          <h3>Load Brinky</h3>
+          <p>Click <b>Load unpacked</b> and choose your Brinky folder. The welcome tour opens. Pin Brinky from the puzzle-piece menu to keep it close.</p>
+          <div class="mock" aria-hidden="true"><span class="chiprow"><span class="chip hi">Load unpacked</span><span class="chip">Pack extension</span><span class="chip">Update</span></span></div>
+        </li>
+      </ol>
+      <div class="notes">
+        <p><b>Using Edge, Brave or Arc?</b> The steps are the same. Edge keeps Developer mode in the menu on the left.</p>
+        <p><b>Developer mode greyed out?</b> Your browser is managed by a workplace or school, which blocks extensions added from a folder. Try a personal browser profile.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec faq-sec" id="faq" aria-labelledby="faq-title">
+    <div class="wrap faq-in">
+      <div class="sec-head"><h2 id="faq-title">Questions</h2></div>
+      <div class="faq">
+        <details>
+          <summary>Is it just a <span class="nowrap">20-20-20</span> timer?</summary>
+          <p>No. Twenty-second look-aways every twenty minutes are where it starts. Brinky also paces your water through the day, turns every third break into a few minutes of movement and nudges your posture. Work mode switches to longer focus cycles like 50/10, and SuperBrink mode lets you set every timing yourself. In every mode, it waits for calls, videos and typing.</p>
+        </details>
+        <details>
+          <summary>Is Brinky really free?</summary>
+          <p>Yes. No account, no ads, no premium tier.</p>
+        </details>
+        <details>
+          <summary>Why do I have to install it by hand?</summary>
+          <p>Brinky isn't in the Chrome Web Store yet. Chrome only allows one-click installs from the store, and it blocks extension files downloaded from other websites. Loading an extension from a folder is how Chrome lets you run one you've chosen to trust.</p>
+          <p>Once Brinky is in the store, installing will be one click and updates will arrive on their own.</p>
+        </details>
+        <details>
+          <summary>Is it safe?</summary>
+          <p>Brinky's full source code is on <a href="https://github.com/" data-gh="">GitHub</a>, so you can read every line, and the download is built from it. Brinky has no server: your browsing, your breaks and your water count never leave your computer. Only download Brinky from this page or its GitHub repository.</p>
+        </details>
+        <details>
+          <summary>Why does Chrome say Brinky can "read and change all your data on all websites"?</summary>
+          <p>Brinky draws the break screen and the water reminder inside the page you're looking at, and it checks whether a tab is in a call or playing a video so it knows when to wait. That needs access to every site. It doesn't read what's on the page, and it doesn't keep or send any of it.</p>
+        </details>
+        <details>
+          <summary>What if I'm in the middle of something?</summary>
+          <p>A small countdown appears 15 seconds before each break, so you can finish your thought or snooze for five minutes. Snoozing twice in a row is fine; the third time, the break happens. Skipping takes a deliberate press-and-hold, so a stray click can't throw a break away.</p>
+        </details>
+        <details>
+          <summary>What does Brinky know about me?</summary>
+          <p>Only what it needs, and only in your browser: your settings, the name you give it if you choose to, and daily counts of breaks and glasses. You can export or reset them any time. Nothing is sent anywhere. <a href="https://github.com/" data-gh="/blob/main/extension/PRIVACY.md">Read the privacy note</a>.</p>
+        </details>
+        <details>
+          <summary>How do I update, and how will I know there's a new version?</summary>
+          <p>On <a href="https://github.com/" data-gh="">GitHub</a>, click <b>Watch</b>, then <b>Custom</b>, then <b>Releases</b>, and you'll get an email when a new version is out. To update, unzip the new <code>brinky.zip</code> into the same folder, replacing the old files, then press the reload arrow on Brinky's card in <code data-ext-url>chrome://extensions</code>. Your settings and history stay.</p>
+        </details>
+        <details>
+          <summary>Chrome warns me about developer mode extensions. Is something wrong?</summary>
+          <p>No. Chrome sometimes reminds you about extensions added from a folder. Keep Brinky switched on. If it ever gets turned off, switch it back on in <code data-ext-url>chrome://extensions</code>.</p>
+        </details>
+        <details>
+          <summary>Which browsers and computers does it work on?</summary>
+          <p>Chrome 130 or newer on Windows, Mac, Linux and ChromeOS, and Chromium browsers like Edge, Brave, Arc, Opera and Vivaldi. It doesn't work in Firefox or Safari, or on phones.</p>
+        </details>
+        <details>
+          <summary>Brinky doesn't show up on some pages.</summary>
+          <p>Chrome doesn't let any extension draw on its own pages, like the New Tab page, <code>chrome://</code> pages and the Chrome Web Store. When you're on one of those, the break opens in its own small window instead.</p>
+        </details>
+        <details>
+          <summary>How do I uninstall it?</summary>
+          <p>Open <code data-ext-url>chrome://extensions</code> and click Remove on Brinky's card. Then you can delete the Brinky folder.</p>
+        </details>
+      </div>
+      <aside class="help" aria-labelledby="help-title">
+        <img src="assets/brinky/worried.webp" alt="" width="300" height="252">
+        <div>
+          <h3 id="help-title">Still stuck?</h3>
+          <p>Open an issue on GitHub. Tell us your browser and what you see; a screenshot helps a lot.</p>
+          <a class="btn quiet sm" href="https://github.com/" data-gh="/issues/new">Open an issue</a>
+        </div>
+      </aside>
+    </div>
+  </section>
+</main>
+
+<!-- ═════════════ blink.drink. ═════════════ -->
+<main class="view bd" data-view="blink-drink" hidden>
+  <div class="bd-deep">
+  <header class="bd-head">
+    <div class="wrap">
+      <h1 class="bd-name">blink.drink.</h1>
+      <p class="bd-open">We are mostly water. Our screens are mostly light.</p>
+    </div>
+  </header>
+
+  <section class="bd-move" aria-label="Part one">
+    <div class="wrap"><img src="assets/brinky/worried.webp" alt="" width="300" height="252">
+      <div>
+        <p>Somewhere around four in the afternoon, the words start to blur.</p>
+        <p>You blink far less than you think.</p>
+        <p>Your shoulders creep up toward your ears.</p>
+        <p>The glass on your desk has been full since lunch.</p>
+        <p>Nothing hurts, exactly. Everything is just a little dimmer.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="bd-move" aria-label="Part two">
+    <div class="wrap"><img src="assets/brinky/sleepy.webp" alt="" width="300" height="252">
+      <div>
+        <p>This isn't a willpower problem.</p>
+        <p>Screens are made to hold your gaze, and they're very good at it.</p>
+        <p>Every tab, every ping, every next thing asks for one more minute.</p>
+        <p>Tired eyes don't complain until it's late.</p>
+        <p>Thirst is easy to ignore when you're busy.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="bd-move" aria-label="Part three">
+    <div class="wrap"><img src="assets/brinky/surprised.webp" alt="" width="300" height="252">
+      <div>
+        <p>Most break timers don't help for long.</p>
+        <p>They count to twenty and cover your screen: mid-sentence, mid-call, mid-thought.</p>
+        <p>So you learn to dismiss them.</p>
+        <p>Then you stop seeing them at all.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="bd-move" aria-label="Part four">
+    <div class="wrap"><img src="assets/brinky/wink.webp" alt="" width="300" height="252">
+      <div>
+        <p>So we made a small friend who notices.</p>
+        <p>It waits until you finish your sentence.</p>
+        <p>It stays quiet while you're on a call.</p>
+        <p>It looks after your water and your shoulders, not just your eyes.</p>
+        <p>It fits around your focus, then gets out of your way.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="bd-move" aria-label="Part five">
+    <div class="wrap"><img src="assets/brinky/calm.webp" alt="" width="300" height="252">
+      <div>
+        <p>Twenty seconds is long enough for your eyes to find the horizon.</p>
+        <p>One glass of water can change how an afternoon feels.</p>
+        <p>Small things, done every day, are how we stay kind to our bodies.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="bd-move" aria-label="Part six">
+    <div class="wrap"><img src="assets/brinky/proud.webp" alt="" width="300" height="252">
+      <div>
+        <p>You can't get back the hours you spend at a screen.</p>
+        <p>But you can look up from it, now and then.</p>
+        <p>Blink slowly. Drink something. Look at something far away.</p>
+      </div>
+    </div>
+  </section>
+
+  </div>
+
+  <section class="bd-end" aria-labelledby="bd-end-title">
+    <div class="wrap">
+      <img src="assets/brinky/happy.webp" alt="Brinky, a small blue water drop, smiling" width="300" height="252">
+      <h2 id="bd-end-title">Blink. Drink.<br>Stay in flow.</h2>
+      <div class="ctas">
+        <a class="btn primary" href="download/brinky.zip" download data-download>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg>
+          <span>Download Brinky</span>
+        </a>
+        <a class="btn quiet" href="#modes">See how it works</a>
+      </div>
+    </div>
+  </section>
+</main>
+</div>
+
+<footer class="foot">
+  <div class="wrap foot-in">
+    <div>
+      <a class="brand" href="#" data-home><img src="assets/icon-32.png" alt="" width="26" height="26"><span>Brinky</span></a>
+      <p>Free, with every line of code on GitHub. Your breaks and glasses stay in your browser. Version 3.1.0.</p>
+    </div>
+    <nav aria-label="More">
+      <a href="#blink-drink">blink.drink.</a>
+      <a href="https://github.com/" data-gh="">GitHub</a>
+      <a href="https://github.com/" data-gh="/blob/main/extension/PRIVACY.md">Privacy</a>
+      <a href="https://github.com/" data-gh="/blob/main/extension/CHANGELOG.md">What's new</a>
+    </nav>
+  </div>
+</footer>
+
+<!-- the 20-second break you can try -->
+<div class="brk" id="brk" role="dialog" aria-modal="true" aria-label="A 20-second break" hidden>
+  <div class="brk-in">
+    <div class="ringbox big">
+      <svg viewBox="0 0 220 220" aria-hidden="true"><circle cx="110" cy="110" r="100" class="trk"/><circle cx="110" cy="110" r="100" class="bar"/></svg>
+      <img id="brkFace" src="assets/brinky/calm.webp" alt="" width="300" height="252">
+    </div>
+    <div class="brk-time" id="brkTime" aria-hidden="true">0:20</div>
+    <p class="brk-msg" id="brkMsg" aria-live="polite">Look at something far away.</p>
+    <div class="brk-btns" id="brkBtns"></div>
+  </div>
+</div>
+
+<script src="assets/site.js"></script>
+</body>
+</html>

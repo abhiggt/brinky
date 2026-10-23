@@ -1,0 +1,102 @@
+{
+  "manifest_version": 3,
+  "name": "Brinky — Blink & Drink breaks",
+  "short_name": "Brinky",
+  "version": "3.1.0",
+  "description": "Blink & Drink breaks: 20-20-20 eye breaks and water reminders that stay quiet during calls, videos and screen sharing.",
+  "minimum_chrome_version": "130",
+  "icons": {
+    "16": "icons/16.png",
+    "32": "icons/32.png",
+    "48": "icons/48.png",
+    "128": "icons/128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Brinky",
+    "default_icon": {
+      "16": "icons/16.png",
+      "32": "icons/32.png",
+      "48": "icons/48.png",
+      "128": "icons/128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "permissions": [
+    "storage",
+    "alarms",
+    "idle",
+    "notifications",
+    "scripting"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "pagewatch.js"
+      ],
+      "run_at": "document_start",
+      "all_frames": true,
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "mascot.js",
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "commands": {
+    "break-now": {
+      "suggested_key": {
+        "default": "Alt+Shift+B"
+      },
+      "description": "Take an eye break now"
+    },
+    "toggle-pause": {
+      "suggested_key": {
+        "default": "Alt+Shift+P"
+      },
+      "description": "Pause or resume Brinky"
+    },
+    "snooze-5": {
+      "suggested_key": {
+        "default": "Alt+Shift+S"
+      },
+      "description": "Snooze the next break by 5 minutes"
+    },
+    "log-water": {
+      "suggested_key": {
+        "default": "Alt+Shift+W"
+      },
+      "description": "Log a glass of water"
+    }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "mascot/*.webp"
+      ],
+      "matches": [
+        "<all_urls>"
+      ],
+      "use_dynamic_url": true
+    }
+  ],
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  }
+}
