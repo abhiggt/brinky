@@ -1,151 +1,82 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Meet Brinky</title>
-<style>
-  :root{--bg:#f4f7fb;--fg:#16181d;--mut:#5f6470;--card:#fff;--line:#e2e6ec;--ink:#16181d;--ink-fg:#fff;--water:#2b87d9}
-  @media (prefers-color-scheme: dark){:root{--bg:#111317;--fg:#f2f3f5;--mut:#9a9ea7;--card:#1b1d21;--line:#2c2f35;--ink:#f2f3f5;--ink-fg:#121316;--water:#4ea3ec}}
-  *{box-sizing:border-box;margin:0}
-  body{font:15px/1.55 ui-rounded,ui-sans-serif,-apple-system,BlinkMacSystemFont,"SF Pro Rounded","Segoe UI",Inter,sans-serif;color:var(--fg);background:var(--bg);
-    display:grid;place-items:center;padding:32px 16px;min-height:100vh}
-  .stage{width:100%;max-width:500px;text-align:center}
-  .buddy{display:inline-block;height:126px;animation:bob 3s ease-in-out infinite}
-  .buddy img{width:150px;height:auto}
-  .buddy.jump{animation:jump .6s cubic-bezier(.3,1.5,.5,1)}
-  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
-  @keyframes jump{0%{transform:translateY(0)}25%{transform:translateY(3px) scale(1.06,.92)}55%{transform:translateY(-16px) scale(.96,1.05)}100%{transform:translateY(0)}}
-  .brand{font-weight:800;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--water);margin-top:6px}
-  .card{margin-top:14px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:28px 28px 20px;text-align:left;min-height:440px;display:flex;flex-direction:column}
-  .steps{flex:1}
-  .step{display:none}
-  .step.on{display:block;animation:in .3s ease}
-  @keyframes in{from{opacity:0;transform:translateY(6px)}}
-  h1{font-size:23px;letter-spacing:-.3px;line-height:1.25;margin-bottom:8px}
-  p{color:var(--mut)}
-  .q{font-size:12px;font-weight:650;letter-spacing:.05em;text-transform:uppercase;color:var(--mut);margin:20px 0 8px}
-  .chips{display:flex;flex-wrap:wrap;gap:8px}
-  .chip{all:unset;cursor:pointer;padding:9px 14px;border-radius:10px;border:1px solid var(--line);font-weight:650;font-size:14px;transition:border-color .15s}
-  .chip small{display:block;font-size:11.5px;font-weight:500;color:var(--mut)}
-  .chip:hover{border-color:var(--mut)}
-  .chip.on{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
-  .chip:focus-visible,.btn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
-  .note{font-size:13px;margin-top:12px}
-  ul{list-style:none;padding:0;margin-top:14px;display:grid;gap:8px;color:var(--mut)}
-  li{padding-left:18px;position:relative}
-  li::before{content:"";position:absolute;left:2px;top:9px;width:7px;height:9px;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;background:var(--water)}
-  .foot{display:flex;align-items:center;justify-content:space-between;margin-top:22px;gap:10px}
-  .dots{display:flex;gap:6px}
-  .dots i{width:6px;height:6px;border-radius:99px;background:var(--line);transition:background .2s}
-  .dots i.on{background:var(--ink)}
-  .btn{all:unset;cursor:pointer;padding:9px 18px;border-radius:10px;font-weight:650;font-size:14px;background:var(--ink);color:var(--ink-fg)}
-  .btn:hover{opacity:.88}
-  .btn.ghost{background:transparent;color:var(--mut);padding:9px 10px}
-  .btn.ghost:hover{color:var(--fg);opacity:1}
-  .btn.line{background:transparent;color:var(--fg);border:1px solid var(--line)}
-  .btn.line:hover{border-color:var(--mut);opacity:1}
-  .pin{margin-top:16px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;font-size:14px;color:var(--mut)}
-  .pin b{color:var(--fg)}
-  .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
-  label.q{display:block}
-  .name{width:100%;font:inherit;font-size:16px;font-weight:600;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;outline:none}
-  .name:focus{border-color:var(--water);box-shadow:0 0 0 3px color-mix(in srgb,var(--water) 22%,transparent)}
-  .name::placeholder{color:var(--mut);font-weight:500}
-</style>
+<link rel="stylesheet" href="brand.css">
+<link rel="stylesheet" href="welcome.css">
 </head>
 <body>
-<div class="stage">
-  <div class="buddy" id="buddy"></div>
-  <div class="brand">Brinky · Blink &amp; Drink</div>
-  <div class="card">
-    <div class="steps">
+<main class="stage">
+  <aside class="side">
+    <div class="me" id="me" aria-hidden="true"></div>
+    <div class="dots" id="dots" aria-hidden="true"></div>
+  </aside>
+  <div class="main">
+  <div class="steps">
+
     <section class="step on" data-s="0">
-      <h1>Hi, I'm Brinky!</h1>
-      <p>I'm a little water drop who helps you blink and drink. I'll remind you to rest your eyes and to sip some water, and I'll stay out of the way when you're busy.</p>
-      <ul>
-        <li>Short look-away breaks to stop end-of-day eye strain</li>
-        <li>A water wave now and then, with a daily goal</li>
-        <li>Quiet during calls, videos, screen sharing and mid-sentence</li>
-      </ul>
+      <p class="eyebrow">Hello</p>
+      <h1>Hi, I'm Brinky.</h1>
+      <p class="lede">A small drop of water that lives in your browser. I'll remind you to <em>rest your eyes</em>, <em>drink water</em> and <em>move</em>, gently, and only at a good moment.</p>
       <label class="q" for="name">What should I call you?</label>
-      <input class="name" id="name" type="text" maxlength="24" placeholder="Your first name (optional)" autocomplete="given-name" spellcheck="false">
+      <input class="field" id="name" maxlength="24" placeholder="Your first name, if you like" autocomplete="given-name" spellcheck="false">
     </section>
 
     <section class="step" data-s="1">
-      <h1>How should your breaks work?</h1>
-      <p>You can switch any time with one tap in the toolbar popup.</p>
-      <div class="chips" data-set="rhythm">
-        <button class="chip" data-v="2020">20-20-20<small>Look away 20 s every 20 min · recommended</small></button>
-        <button class="chip" data-v="work">Work mode<small>50 min focus, then a 5 min break</small></button>
+      <p class="eyebrow">1 of 3 · Eyes</p>
+      <h1>Rest your eyes, gently.</h1>
+      <p class="lede">Your cursor blinks a few times first, so a break never arrives out of nowhere. Then I lead one short exercise.</p>
+      <div class="rows">
+        <div class="r"><span>Eye break every</span><div class="seg" data-set="eyes.every"><button data-v="20">20 min</button><button data-v="30">30 min</button><button data-v="45">45 min</button></div></div>
+        <div class="r"><span>Each break</span><div class="seg" data-set="eyes.mode"><button data-v="guided">An exercise</button><button data-v="quick">A look away</button></div></div>
+        <div class="r"><span>Blink nudges<small>Your cursor blinks; blink along</small></span><div class="seg" id="blinkSeg"><button data-b="off">Off</button><button data-b="5">5 min</button><button data-b="10">10 min</button><button data-b="20">20 min</button></div></div>
       </div>
-      <p class="note">Every longer break comes with a few gentle moves, and I'll show you how.</p>
+      <div class="acts"><button class="btn line" id="tryBlink">Watch a blink</button><button class="btn line" id="tryEye">Try a 12-second break</button></div>
     </section>
 
     <section class="step" data-s="2">
-      <h1>How much water today?</h1>
-      <p>Most people do well with around 8 glasses. Your progress lives in the toolbar popup.</p>
-      <div class="q">Daily goal</div>
-      <div class="chips" data-set="water.goal">
-        <button class="chip" data-v="6">6 glasses</button>
-        <button class="chip" data-v="8">8 glasses<small>About 2 litres</small></button>
-        <button class="chip" data-v="10">10 glasses</button>
+      <p class="eyebrow">2 of 3 · Water</p>
+      <h1>Water, without the counting.</h1>
+      <p class="lede">I spread your glasses across the day and tell you where you are. Pick how I ask.</p>
+      <div class="choices" id="styles"></div>
+      <div class="rows">
+        <div class="r"><span>Daily goal</span><div class="stepper"><button data-goal="-1" aria-label="Fewer">−</button><b id="goal">8 glasses</b><button data-goal="1" aria-label="More">+</button></div></div>
+        <div class="r"><span>Water reminders<small id="wsub">Off still counts the glasses you log</small></span><button class="sw" role="switch" data-sw="water.on" aria-label="Water reminders"></button></div>
       </div>
-      <div class="q">Reminders</div>
-      <div class="chips" data-set="water.on">
-        <button class="chip" data-v="on">Paced to my goal<small>Spread across your day</small></button>
-        <button class="chip" data-v="off">No reminders<small>Just track</small></button>
-      </div>
-      <div class="q">Style</div>
-      <div class="chips" data-set="water.style">
-        <button class="chip" data-v="wave">Wave<small>Rolls across the page</small></button>
-        <button class="chip" data-v="card">Sip card<small>A quiet corner card</small></button>
-      </div>
-      <div class="row"><button class="btn line" id="preview">Preview it</button></div>
+      <div class="acts"><button class="btn line" id="tryWater">Show it on this page</button></div>
     </section>
 
     <section class="step" data-s="3">
-      <h1>When do you usually work?</h1>
-      <p>Outside these hours I'm off duty, so evenings and weekends stay yours.</p>
-      <div class="q">My hours</div>
-      <div class="chips" data-set="hours">
-        <button class="chip" data-v="09:00-19:00|1,2,3,4,5">Weekdays<small>9 am – 7 pm</small></button>
-        <button class="chip" data-v="10:00-18:00|1,2,3,4,5">Weekdays<small>10 am – 6 pm</small></button>
-        <button class="chip" data-v="09:00-19:00|0,1,2,3,4,5,6">Every day<small>9 am – 7 pm</small></button>
-        <button class="chip" data-v="any">Any time<small>Day and night</small></button>
+      <p class="eyebrow">3 of 3 · Move</p>
+      <h1>Your cursor moves, so you do.</h1>
+      <p class="lede">Every forty-five minutes or so your cursor gets up for a few seconds, with a small note beside it. Nothing to close.</p>
+      <div class="demo" aria-hidden="true"><div class="big"><svg viewBox="0 0 22 28"><path d="M3 2.5v19.2l4.9-4.6 3.2 7.3 3.3-1.4-3.1-7.1h6.6z" fill="#111" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/></svg><span class="chip">stretch a little :)</span></div></div>
+      <div class="rows">
+        <div class="r"><span>Move reminders</span><div class="seg" id="moveSeg"><button data-mv="off">Off</button><button data-mv="mix">Mix</button><button data-mv="stretch">Stretch</button><button data-mv="walk">Walk</button><button data-mv="ball">Ball</button></div></div>
       </div>
+      <div class="acts"><button class="btn line" id="tryStretch">Move my cursor</button></div>
     </section>
 
     <section class="step" data-s="4">
-      <h1>I'll keep quiet when you're busy</h1>
-      <p>Nothing to set up. I notice on my own and wait.</p>
-      <ul>
-        <li>In calls, while you share your screen, during videos and fullscreen</li>
-        <li>Mid-sentence: I wait for a pause in your typing</li>
-        <li>Little nudges appear right by your cursor, where your eyes already are</li>
-      </ul>
-      <p class="note">Want every detail (focus sites, sounds, quiet times)? It's all in SuperBrink settings.</p>
+      <p class="eyebrow">All set</p>
+      <h1 id="doneTitle">You're all set.</h1>
+      <p class="lede">Your first eye break starts counting down now. I stay quiet while you type, on calls, in fullscreen and when you're away.</p>
+      <div class="pin"><b>Keep me close</b><span>Click the puzzle piece in your toolbar, then the pin next to Brinky. Click me any time to log a glass or rest your eyes.</span></div>
     </section>
-
-    <section class="step" data-s="5">
-      <h1 id="doneTitle">We're all set!</h1>
-      <p>When you press Start, I'll begin counting down to your first eye break. Tap me in the toolbar to log a glass, pause, or say hi.</p>
-      <div class="pin"><b>Keep me close.</b> Click the puzzle-piece icon in Chrome's toolbar, then the pin next to Brinky.</div>
-      <div class="row"><button class="btn line" id="tryBreak">Try a 10-second break</button></div>
-    </section>
-    </div>
-
-    <div class="foot">
-      <button class="btn ghost" id="back">Back</button>
-      <div class="dots" id="dots"></div>
-      <button class="btn" id="next">Nice to meet you</button>
-    </div>
   </div>
-</div>
-<div id="waterHost" style="position:fixed;inset:0;pointer-events:none;z-index:9999"></div>
-<script src="mascot.js"></script>
-<script src="water.js"></script>
-<script src="breaklayer.js"></script>
+  <footer class="foot">
+    <button class="btn plain" id="back">Back</button>
+    <button class="btn ink lg" id="next">Continue</button>
+  </footer>
+  </div>
+</main>
+<script src="env-local.js"></script>
+<script src="pointer.js"></script>
+<script src="exercises.js"></script>
+<script src="face.js"></script>
+<script src="layer.js"></script>
 <script type="module" src="welcome.js"></script>
 </body>
 </html>

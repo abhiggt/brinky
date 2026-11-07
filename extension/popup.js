@@ -1,178 +1,151 @@
-import { saveSettings, fmt, isPaused, isQuiet, today, streak, inHours, nextStart, clock12, usageTip, volume } from "./common.js";
-import { mountSettings } from "./settings.js";
+// The toolbar popup: the next eye break, today's water, and a way to be quiet for a while.
+// Cards render from the shared state and update in place every second.
+import { I } from "./art.js";
+import { send } from "./common.js";
 
-const $ = (id) => document.getElementById(id);
-const send = (m) => chrome.runtime.sendMessage(m);
-const M = globalThis.BrinkyMascot;
-let S, E, ST, STATS, mood = "", justDrankUntil = 0, chatter = null; // S: your settings as saved; E: what Brinky runs with
+const F = globalThis.BrinkyFace;
+const $ = (s, r = document) => r.querySelector(s);
+let S = null; // { settings, today, next, nextEx, paused }
 
-const C = 2 * Math.PI * 40;
-$("bar").style.strokeDasharray = C;
-const WAIT = { call: "Waiting for your call", sharing: "Waiting: you're sharing", video: "Waiting for your video", fullscreen: "Waiting: fullscreen", focus: "Waiting on a focus site", away: "Paused while you're away", elsewhere: "Sent you a notification" };
-const mins = (ms) => { const m = Math.max(1, Math.round(ms / 60e3)); return m >= 60 ? `${Math.floor(m / 60)} h${m % 60 ? ` ${m % 60} min` : ""}` : `${m} min`; };
-const toMin = (t) => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
-const dayName = (t) => new Date(t).toLocaleDateString(undefined, { weekday: "short" });
+const split = (ms) => { const s = Math.max(0, Math.round(ms / 1000)); return s >= 3600 ? [`${Math.floor(s / 3600)}:${String(Math.floor((s % 3600) / 60)).padStart(2, "0")}`, "h"] : [`${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`, "min"]; };
+const mins = (ms) => { const m = Math.max(1, Math.round(ms / 60e3)); return m >= 60 ? `${Math.floor(m / 60)} h ${m % 60 ? `${m % 60} min` : ""}`.trim() : `${m} min`; };
+const clock = (t) => new Date(t).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+function applyTheme(t) { if (t === "auto") document.documentElement.removeAttribute("data-theme"); else document.documentElement.dataset.theme = t; }
 
-function expectedGlasses() {
-  // how many glasses "should" be done by now, spread across your day
-  const S = E;
-  const a = S.activeHours?.on ? S.activeHours : { start: "09:00", end: "21:00" };
-  const d = new Date(), now = d.getHours() * 60 + d.getMinutes(), s0 = toMin(a.start), e0 = toMin(a.end);
-  let frac;
-  if (e0 > s0) frac = now < s0 ? 0 : now >= e0 ? 1 : (now - s0) / (e0 - s0);
-  else { const span = 1440 - s0 + e0, into = now >= s0 ? now - s0 : now < e0 ? 1440 - s0 + now : -1; frac = into < 0 ? 0 : into / span; }
-  return Math.floor(S.water.goal * frac);
+F.style();
+const face = F.mount($("#me"), { src: "mascot/blank.webp", mood: "neutral" });
+face.autoBlink();
+face.follow(true);
+
+// ───────────── cards ─────────────
+function renderHome() {
+  const s = S.settings, c = $("#cards");
+  let html = "";
+  if (!s.on) html += `<div class="card sleep"><div id="sleepy"></div><h2>Brinky is switched off</h2><p>No reminders. Glasses you log still count.</p><button class="btn ink" data-a="wake">Switch on</button></div>`;
+  if (s.on && s.eyes.on) html += `<div class="card eye" data-m="eye">
+      <div class="ring"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="28" class="tr"/><circle cx="32" cy="32" r="28" class="pr" data-k="ring" pathLength="100"/></svg><b data-k="t">--:--</b></div>
+      <div class="info"><div class="ttl">Next eye break</div><div class="lbl" data-k="u"></div></div>
+      <button class="btn ink" data-a="eyeNow">Rest now</button></div>`;
+  html += `<div class="card water" data-m="water">
+      <div class="top"><div><div class="ttl">Water today</div><div class="lbl" data-k="sub"></div></div><b data-k="h"></b></div>
+      <div class="glasses" data-k="g"></div>
+      <div class="foot"><button class="round" data-a="unglass" aria-label="Remove a glass" title="Remove a glass">−</button><button class="btn blue" data-a="glass">+ Log a glass</button></div></div>`;
+  if (s.on) html += `<div class="quiet"><div class="lbl" data-k="pl"></div><div data-k="pctl"></div></div>`;
+  c.innerHTML = html;
+  if (!s.on) F.mount($("#sleepy"), { src: "mascot/blank.webp", mood: "sleepy" });
+  tick();
 }
 
-function setMood(m) {
-  if (m === mood) return;
-  mood = m;
-  const img = $("buddy").querySelector("img");
-  if (img) M.set(img, m); else $("buddy").innerHTML = M.html({ mood: m, size: 62 });
-}
-M.preload(); M.blink(document);
-
-function render() {
-  const S = E;
-  const n = Date.now(), paused = isPaused(ST), quiet = isQuiet(ST), asleep = S.enabled && !paused && !inHours(S);
-  const d = STATS[today()] || {}, glasses = d.water || 0, goal = S.water.goal;
-  const waiting = ST.phase !== "break" && ST.blockedBy ? ST.blockedBy : "";
-
-  // ── blink card ──
-  let t = "--:--", frac = 0, sub = `${S.breakSec} s · look far away`, small = false, waitRing = false;
-  const long = S.longEvery > 0 && (ST.breakCount + 1) % S.longEvery === 0;
-  if (long) sub = S.workMode.on ? `${S.longMin} min break · work mode` : `${S.longMin} min movement break`;
-  if (!S.enabled) { t = "Off"; sub = "Brinky is off"; }
-  else if (paused) {
-    if (ST.pausedUntil === -1) { t = "∞"; sub = "Paused"; }
-    else if (ST.pausedUntil - n > 3600e3) { t = clock12(ST.pausedUntil); small = true; sub = `Paused until ${dayName(ST.pausedUntil)}`; }
-    else { t = fmt(ST.pausedUntil - n); sub = "Paused"; }
+function tick() {
+  if (!S) return;
+  const s = S.settings, t = S.today, w = s.water;
+  const eye = $('[data-m="eye"]');
+  if (eye) {
+    const every = s.eyes.every * 60e3, due = S.next.eye, left = due ? due - Date.now() : every, [v] = split(left);
+    $("[data-k=t]", eye).textContent = S.paused ? "Paused" : v;
+    eye.classList.toggle("paused", !!S.paused);
+    $("[data-k=ring]", eye).style.strokeDashoffset = S.paused ? 100 : (100 * (1 - Math.max(0, Math.min(1, left / every)))).toFixed(2);
+    $("[data-k=u]", eye).textContent = S.paused ? `Until ${clock(s.pausedUntil)}` : `Every ${s.eyes.every} minutes`;
   }
-  else if (quiet) { t = fmt(ST.quietUntil - n); sub = `${ST.quietLabel || "Quiet time"} · reminders resting`; frac = 1; waitRing = true; }
-  else if (asleep) { const ns = nextStart(S); t = "Zz"; sub = ns ? `Off duty till ${dayName(ns)} ${clock12(ns)}` : "Off duty"; }
-  else if (ST.phase === "break") { t = fmt(ST.breakEndsAt - n); frac = 1; sub = "On a break"; }
-  else if (waiting) { t = "wait"; small = true; sub = WAIT[waiting] || "Waiting"; frac = 1; waitRing = true; }
-  else {
-    const left = ST.nextBreakAt - n;
-    t = fmt(left); frac = 1 - left / (S.workMin * 60e3);
-    if (ST.skipNext) sub = "Next one skipped";
+  const wc = $('[data-m="water"]');
+  if (wc) {
+    const done = t.glasses >= w.goal;
+    $("[data-k=h]", wc).innerHTML = `${t.glasses}<span>/${w.goal}</span>`;
+    const g = $("[data-k=g]", wc), n = Math.max(w.goal, t.glasses);
+    if (g.children.length !== n) g.innerHTML = Array.from({ length: n }, (_, i) => glass(i)).join("");
+    [...g.children].forEach((x, i) => x.classList.toggle("on", i < t.glasses));
+    wc.classList.toggle("done", done);
+    $("[data-k=sub]", wc).textContent = done ? "Goal reached. Lovely."
+      : !w.on ? "Reminders off, still counting"
+      : S.paused ? "Reminders paused"
+      : S.next.water ? `Next reminder in ${mins(S.next.water - Date.now())}` : `${w.ml} ml a glass`;
   }
-  $("time").textContent = t;
-  $("time").classList.toggle("small", small || t.length > 5);
-  $("bar").style.strokeDashoffset = C * (1 - Math.min(1, Math.max(0, frac)));
-  $("bar").parentElement.parentElement.classList.toggle("wait", waitRing);
-  $("eyeSub").textContent = sub;
-
-  // ── drink card ──
-  $("glasses").textContent = glasses;
-  $("goal").textContent = `/ ${goal} glasses`;
-  const f = Math.min(1, glasses / goal);
-  $("gfill").style.transform = `translateY(${(63 - f * 57).toFixed(1)}px)`;
-  $("waterSub").textContent = !S.water.on ? "Wave reminders off"
-    : !S.enabled || paused ? "Reminders paused"
-    : quiet ? "Resting during quiet time"
-    : asleep ? "Resting till your next day"
-    : S.water.stopAtGoal && glasses >= goal ? "Goal done · waves resting"
-    : `Next ${S.water.style === "card" ? "sip card" : "wave"} in ${mins(ST.nextWaterAt - n)}`;
-  $("unlog").disabled = glasses === 0;
-
-  // ── controls ──
-  $("cards").classList.toggle("dim", !S.enabled);
-  $("actions").hidden = !S.enabled;
-  $("turnOn").hidden = S.enabled;
-  if (!S.enabled) $("pauseMenu").hidden = true;
-  $("pauseBtn").textContent = paused || quiet ? "Resume" : "Pause";
-  $("workMode").setAttribute("aria-checked", String(!!S.workMode.on));
-  $("wmSub").textContent = S.workMode.on ? `${S.workMode.everyMin} min focus · ${S.workMode.breakMin} min break` : "Fewer, longer breaks for deep work";
-  $("skipNext").classList.toggle("on", !!ST.skipNext);
-  $("skipNext").textContent = ST.skipNext ? "Next break skipped" : "Skip next break";
-
-  // ── week ──
-  const days = [];
-  for (let i = 6; i >= 0; i--) { const dd = new Date(); dd.setDate(dd.getDate() - i); days.push(dd); }
-  $("days").innerHTML = days.map((dd, i) => {
-    const k = today(dd), s = STATS[k] || {}, w = s.water || 0, fr = Math.min(1, w / goal), y = 22 - fr * 18;
-    const label = dd.toLocaleDateString(undefined, { weekday: "narrow" });
-    return `<div class="day ${i === 6 ? "today" : ""}" title="${dd.toLocaleDateString(undefined, { weekday: "long" })}: ${w} glass${w === 1 ? "" : "es"}, ${s.taken || 0} breaks taken${s.missed ? `, ${s.missed} missed` : ""}">
-      <svg class="drop" viewBox="0 0 18 22"><defs><clipPath id="dc${i}"><path d="M9 1 C10 4 16 9 16 14 A7 7 0 0 1 2 14 C2 9 8 4 9 1Z"/></clipPath></defs>
-        <path d="M9 1 C10 4 16 9 16 14 A7 7 0 0 1 2 14 C2 9 8 4 9 1Z" fill="var(--card2)"/>
-        <rect x="0" y="${y.toFixed(1)}" width="18" height="22" fill="${fr >= 1 ? "#2f9bf0" : "#7cc4ff"}" clip-path="url(#dc${i})"/>
-      </svg><span>${label}</span></div>`;
-  }).join("");
-  const stk = streak(STATS, goal);
-  $("streak").textContent = stk.n >= 2 ? `${stk.n}-day streak` : stk.n === 1 ? (stk.todayHit ? "Goal hit today" : "Goal hit yesterday") : "";
-
-  const sinceRest = ST.lastRestAt && S.enabled && !paused && !asleep ? Math.round((n - ST.lastRestAt) / 60e3) : 0;
-  $("since").textContent = sinceRest >= 1 ? `${sinceRest} min since your last real rest` : "";
-  const ml = glasses * S.water.glassMl, taken = d.taken || 0;
-  $("today").textContent = `Today: ${taken} break${taken === 1 ? "" : "s"} taken${d.missed ? ` · ${d.missed} missed` : ""} · ${volume(S, ml)} water`;
-
-  // ── what Brinky says ──
-  if (chatter && n < chatter.until) { setMood(chatter.mood); $("say").textContent = chatter.text; return; }
-  const ln = M.line({
-    enabled: S.enabled, paused, asleep, wakeAt: (() => { const ns = nextStart(S); return ns ? `${dayName(ns)} ${clock12(ns)}` : "tomorrow"; })(),
-    pausedUntil: paused && ST.pausedUntil > 0 ? clock12(ST.pausedUntil) : "",
-    quiet: quiet ? ST.quietLabel || "Quiet time" : "",
-    onBreak: ST.phase === "break", waiting,
-    breakSoon: S.enabled && ST.phase !== "break" && !waiting && ST.nextBreakAt - n < 60e3,
-    glasses, goal, expected: expectedGlasses(), waterOn: S.water.on,
-    waterSoonMin: S.water.on ? (ST.nextWaterAt - n) / 60e3 : null,
-    justDrank: n < justDrankUntil, streak: stk.n, sinceRest, tip: usageTip(STATS, S), name: S.name,
-  });
-  setMood(ln.mood);
-  $("say").textContent = ln.text;
+  const ctl = $("[data-k=pctl]");
+  if (ctl) {
+    const key = S.paused ? "p" : "r";
+    if (ctl.dataset.v !== key) {
+      ctl.dataset.v = key;
+      ctl.innerHTML = S.paused ? `<button class="btn line" data-a="resume">Resume</button>`
+        : `<div class="seg" role="group" aria-label="Pause for"><button data-p="15">15 min</button><button data-p="60">1 hour</button><button data-p="tomorrow">Today</button></div>`;
+    }
+    $("[data-k=pl]").innerHTML = S.paused ? `<b>Paused</b>until ${clock(s.pausedUntil)}` : `<b>Pause</b>all reminders`;
+  }
+  header();
 }
 
-async function load() {
-  ({ settings: S, eff: E, state: ST, stats: STATS } = await send({ t: "get" }));
-  render();
+// one little glass; it fills with water when logged
+const GL = "M3 2h16l-1.9 21.3q-.2 2.2-2.4 2.2H7.3q-2.2 0-2.4-2.2z";
+const glass = (i) => `<svg class="gl" viewBox="0 0 22 28" aria-hidden="true"><defs><clipPath id="gc${i}"><path d="${GL}"/></clipPath></defs>
+  <g clip-path="url(#gc${i})"><g class="wt"><rect x="0" y="7" width="22" height="22"/><ellipse cx="11" cy="7.2" rx="9" ry="1.4" class="sf"/></g></g>
+  <path d="${GL}" class="ol"/><path d="M6.4 5.5l1 14.5" class="hl"/></svg>`;
+
+// ───────────── Brinky says ─────────────
+let poked = 0;
+function header() {
+  const s = S.settings, h = new Date().getHours(), greet = h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
+  const t = S.today, sum = `${t.breaks} eye break${t.breaks === 1 ? "" : "s"} today`;
+  let mood = "neutral", small = s.name ? greet : sum, big = s.name || greet;
+  if (!s.on || S.paused) mood = "sleepy";
+  else if (s.water.on && S.today.glasses >= s.water.goal) mood = "happy";
+  else if (S.next.eye && S.next.eye - Date.now() < 60e3) { mood = "surprised"; small = "Eye break in a moment"; }
+  $("#hi").textContent = big;
+  if (Date.now() - poked > 6000) $("#say").textContent = small;
+  if (face.el.dataset.mood !== mood && !face.el.dataset.react) face.mood(mood);
 }
-const act = async (m) => { await send(m); await load(); };
+const say = (line) => { $("#say").textContent = line; poked = Date.now(); };
+const react = (mood, ms = 1300) => { face.el.dataset.react = "1"; face.mood(mood); setTimeout(() => { delete face.el.dataset.react; header(); }, ms); };
+// Brinky is interactive: tap him, tickle him (rub back and forth), and he notices what you point at
+const REACT = [["happy", "Hi! Blink slowly with me."], ["laugh", "Hehe. I'm a drop. I believe in you."], ["surprised", "Oh! Had some water lately?"], ["thinking", "Hmm. Shoulders down, jaw soft."], ["happy", "Look at something far away."]];
+let ri = 0;
+$("#me").addEventListener("click", () => {
+  const me = $("#me"); me.classList.remove("jump"); void me.offsetWidth; me.classList.add("jump");
+  const [mood, line] = REACT[ri++ % REACT.length];
+  react(mood, 1600); say(line);
+});
+let rub = 0, rubT = 0, lastX = null;
+$("#me").addEventListener("pointermove", (e) => {
+  if (lastX !== null && Math.sign(e.movementX) !== Math.sign(lastX) && Math.abs(e.movementX) > 2) rub++;
+  lastX = e.movementX; clearTimeout(rubT); rubT = setTimeout(() => { rub = 0; }, 700);
+  if (rub === 6) { react("laugh", 1800); say("Hehe, that tickles!"); }
+});
+document.addEventListener("pointerover", (e) => {
+  if (face.el.dataset.react || !S) return;
+  if (e.target.closest('[data-a="eyeNow"]')) { face.mood("calm"); return; }
+  if (e.target.closest('[data-a="glass"]')) { face.mood("surprised"); return; }
+  if (e.target.closest('[data-p],[data-a="resume"]')) { face.mood("sleepy"); return; }
+  if (e.target.closest("#app")) header();
+});
+// when nothing is happening, he glances around now and then
+let idleT = 0;
+const idle = () => { clearTimeout(idleT); idleT = setTimeout(() => { if (!face.el.dataset.react) face.look(Math.random() * 1.6 - 0.8, Math.random() * 1 - 0.6); idle(); }, 4000 + Math.random() * 3000); };
+addEventListener("pointermove", idle, { passive: true }); idle();
 
-// tap Brinky for a little hello
-const HI = [
-  ["excited", "Hehe, that tickles."], ["wink", "Fun fact: I'm 100% water. You're about 60%."],
-  ["curious", "Have you blinked lately? Go on, a few slow ones."], ["proud", "You're doing great. I mean it."],
-  ["surprised", "Is it just me or is it dry in here?"], ["smug", "Shoulders down, jaw unclenched. Better?"],
-];
-$("buddy").onclick = () => {
-  const nm = String(S.name || "").trim();
-  const [m, text] = nm && Math.random() < 0.4 ? ["happy", `Hi ${nm}! Good to see you.`] : HI[Math.floor(Math.random() * HI.length)];
-  chatter = { mood: m, text, until: Date.now() + 4000 };
-  $("buddy").classList.remove("jump"); void $("buddy").offsetWidth; $("buddy").classList.add("jump");
-  render();
-};
+// ───────────── actions ─────────────
+async function refresh(st) { S = st || (await send({ t: "state" })); if (!S) return; applyTheme(S.settings.theme); }
+async function save(patch) { await refresh(await send({ t: "save", patch })); renderHome(); }
 
-$("now").onclick = () => act({ t: "breakNow" }).then(() => window.close());
-$("pauseBtn").onclick = () => (isPaused(ST) ? act({ t: "resume" }) : isQuiet(ST) ? act({ t: "endQuiet" }) : ($("pauseMenu").hidden = !$("pauseMenu").hidden));
-document.querySelectorAll("[data-pause]").forEach((b) => (b.onclick = () => { const v = b.dataset.pause; act({ t: "pause", min: v === "tomorrow" ? v : +v }); $("pauseMenu").hidden = true; }));
-$("skipNext").onclick = () => act({ t: "skipNext" });
-$("turnOn").onclick = () => act({ t: "toggle" });
-$("log").onclick = async () => {
-  justDrankUntil = Date.now() + 4000; chatter = null;
-  $("buddy").classList.remove("jump"); void $("buddy").offsetWidth; $("buddy").classList.add("jump");
-  await act({ t: "logWater" });
-};
-$("unlog").onclick = () => act({ t: "logWater", n: -1 });
-// one tap: Work mode on or off
-$("workMode").onclick = async () => { S = await saveSettings({ workMode: { ...S.workMode, on: !S.workMode.on } }); await send({ t: "settingsChanged" }); await load(); };
+document.addEventListener("click", async (e) => {
+  const a = e.target.closest("[data-a]"), p = e.target.closest("[data-p]");
+  if (p) { await refresh(await send({ t: "pause", what: p.dataset.p === "tomorrow" ? "tomorrow" : +p.dataset.p })); return renderHome(); }
+  if (!a) return;
+  const k = a.dataset.a;
+  if (k === "eyeNow") { send({ t: "eyeNow" }); window.close(); }
+  if (k === "glass" || k === "unglass") {
+    await refresh(await send({ t: "glass", d: k === "glass" ? 1 : -1 })); tick();
+    if (k === "glass") {
+      const me = $("#me"); me.classList.remove("gulp"); void me.offsetWidth; me.classList.add("gulp");
+      const done = S.today.glasses >= S.settings.water.goal;
+      react(done ? "laugh" : "happy", 1500); say(done ? "That's the goal. You're wonderful." : "Glug. Thank you!");
+    }
+  }
+  if (k === "resume") { await refresh(await send({ t: "pause", what: 0 })); renderHome(); }
+  if (k === "wake") save({ on: true });
+});
+$("#toSettings").innerHTML = I.gear;
+$("#toSettings").addEventListener("click", () => { chrome.runtime.openOptionsPage(); window.close(); });
 
-// ── settings: Home → Settings (the core); SuperBrink settings open in a tab of their own ──
-async function setK(k, v) {
-  const [a, b] = k.split(".");
-  S = await saveSettings(b ? { [a]: { ...S[a], [b]: v } } : { [a]: v });
-  await send({ t: "settingsChanged" });
-}
-let view = "home";
-function go(v) {
-  view = v;
-  for (const id of ["home", "settings"]) $(id).hidden = id !== v;
-  if (v === "home") { mood = ""; load(); }
-  else mountSettings($(v), v, { get S() { return S; }, set S(x) { S = x; }, setK, send, go, openSuper, remount: () => go(v) });
-}
-$("openSettings").onclick = () => go("settings");
-const openSuper = () => { chrome.runtime.openOptionsPage(); window.close(); };
-addEventListener("keydown", (e) => { if (e.key === "Escape" && view !== "home") { e.preventDefault(); go("home"); } });
-
-await load();
-setInterval(() => view === "home" && load(), 1000);
+// ───────────── go ─────────────
+await refresh();
+if (S) renderHome();
+setInterval(tick, 1000);                                   // countdowns tick locally
+setInterval(async () => { await refresh(); tick(); }, 5000); // and re-sync now and then

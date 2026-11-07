@@ -1,95 +1,80 @@
-import { getRaw, saveSettings, lines } from "./common.js";
+// The walkthrough: five calm steps. Previews run Brinky's real in-page layer right here.
+import { STYLE_ART } from "./art.js";
+import { send, waterPrompt, DEFAULTS, merge } from "./common.js";
 
-const $ = (id) => document.getElementById(id);
-const M = globalThis.BrinkyMascot;
+const $ = (s) => document.querySelector(s);
+const L = globalThis.BrinkyLayer;
+let S = merge(DEFAULTS, {});
+let step = 0;
 const steps = [...document.querySelectorAll(".step")];
-const MOODS = ["happy", "curious", "wink", "calm", "smug", "excited"];
-const NEXT = ["Nice to meet you", "Next", "Next", "Next", "Next", "Start"];
-let i = 0, S = await getRaw();
 
-M.preload(); M.blink(document);
-const setBuddy = (mood) => { const img = $("buddy").querySelector("img"); if (img) M.set(img, mood); else $("buddy").innerHTML = M.html({ mood, size: 150 }); };
-const jump = () => { const b = $("buddy"); b.classList.remove("jump"); void b.offsetWidth; b.classList.add("jump"); };
-$("dots").innerHTML = steps.map(() => "<i></i>").join("");
+const get = (path) => path.split(".").reduce((o, k) => o?.[k], S);
+const patchOf = (path, v) => path.split(".").reverse().reduce((acc, k) => ({ [k]: acc }), v);
+async function save(patch) { S = merge(S, patch); const r = await send({ t: "save", patch }); if (r?.settings) S = r.settings; paint(); }
+function theme() { if (S.theme === "auto") document.documentElement.removeAttribute("data-theme"); else document.documentElement.dataset.theme = S.theme; }
 
-// your name (optional): Brinky uses it in greetings, breaks and water reminders
-const nameIn = $("name");
-const name = () => nameIn.value.trim().slice(0, 24);
-let nameT;
-nameIn.value = S.name || "";
-nameIn.addEventListener("input", () => {
-  clearTimeout(nameT);
-  nameT = setTimeout(async () => { S = await saveSettings({ name: name() }); }, 400);
-  label();
-});
-nameIn.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); show(i + 1); } });
-const label = () => {
-  const n = name();
-  $("next").textContent = i === 0 && n ? `Nice to meet you, ${n}` : NEXT[i];
-  $("doneTitle").textContent = n ? `We're all set, ${n}!` : "We're all set!";
-};
+const F = globalThis.BrinkyFace;
+F.style();
+const me = F.mount($("#me"), { src: "mascot/blank.webp", mood: "neutral" });
+me.autoBlink(); me.follow(true);
+$("#styles").innerHTML = [["wave", "A wave", "Washes up the page like the sea"], ["tumbler", "A little glass", "Lands by your cursor"], ["card", "A note", "A quiet card in the corner"]]
+  .map(([v, l, d]) => `<button class="choice" data-style="${v}">${STYLE_ART[v]}<b>${l}</b><small>${d}</small></button>`).join("");
+$("#dots").innerHTML = steps.map(() => "<i></i>").join("");
 
-function show(n) {
-  if (i === 0 && name() !== (S.name || "")) { clearTimeout(nameT); saveSettings({ name: name() }).then((x) => (S = x)); }
-  i = Math.max(0, Math.min(steps.length - 1, n));
-  steps.forEach((s, k) => s.classList.toggle("on", k === i));
-  [...$("dots").children].forEach((d, k) => d.classList.toggle("on", k === i));
-  $("back").style.visibility = i ? "visible" : "hidden";
-  label();
-  setBuddy(MOODS[i]); jump();
-  steps[i].querySelector(".chip")?.focus({ preventScroll: true });
+function paint() {
+  theme();
+  document.querySelectorAll("[data-set]").forEach((g) => g.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(get(g.dataset.set)) === b.dataset.v)));
+  document.querySelectorAll("[data-sw]").forEach((b) => b.setAttribute("aria-checked", !!get(b.dataset.sw)));
+  document.querySelectorAll("[data-style]").forEach((b) => b.setAttribute("aria-pressed", S.water.style === b.dataset.style));
+  $("#goal").textContent = `${S.water.goal} glasses`;
+  $("#wsub").textContent = S.water.on ? "Off still counts the glasses you log" : "Off. Glasses you log still count.";
+  const bv = S.eyes.blink ? String(S.eyes.blinkEvery) : "off";
+  document.querySelectorAll("#blinkSeg button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.b === bv));
+  const mv = S.stretch.on ? S.stretch.move || "mix" : "off";
+  document.querySelectorAll("#moveSeg button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.mv === mv));
+  $("#doneTitle").textContent = S.name ? `You're all set, ${S.name}.` : "You're all set.";
+}
+function go(n) {
+  const rev = n < step;
+  step = Math.max(0, Math.min(steps.length - 1, n));
+  steps.forEach((s, i) => { s.classList.toggle("on", i === step); s.classList.toggle("rev", rev && i === step); });
+  document.querySelectorAll("#dots i").forEach((d, i) => d.classList.toggle("on", i === step));
+  $("#back").classList.toggle("hide", step === 0);
+  $("#next").textContent = step === 0 ? "Nice to meet you" : step === steps.length - 1 ? "Start Brinky" : "Continue";
+  me.mood(["neutral", "neutral", "happy", "neutral", "laugh"][step]); // a laugh at the end
+  if (step === 1) setTimeout(() => me.blink(true), 500);
 }
 
-// reflect current settings in the chips
-const hoursKey = (a) => (a.on ? `${a.start}-${a.end}|${(a.days || []).join(",")}` : "any");
-const current = {
-  rhythm: S.workMode.on ? "work" : "2020", "water.goal": S.water.goal, "water.style": S.water.style,
-  "water.on": S.water.on ? "on" : "off", hours: hoursKey(S.activeHours),
-};
-document.querySelectorAll("[data-set]").forEach((group) => {
-  const key = group.dataset.set;
-  const mark = (v) => group.querySelectorAll(".chip").forEach((c) => c.classList.toggle("on", c.dataset.v === String(v)));
-  mark(current[key]);
-  group.addEventListener("click", async (e) => {
-    const c = e.target.closest(".chip"); if (!c) return;
-    mark(c.dataset.v);
-    const v = c.dataset.v;
-    if (key === "rhythm") S = await saveSettings({ workMode: { ...S.workMode, on: v === "work" } });
-    else if (key === "water.goal") S = await saveSettings({ water: { ...S.water, goal: +v } });
-    else if (key === "water.style") S = await saveSettings({ water: { ...S.water, style: v } });
-    else if (key === "water.on") S = await saveSettings({ water: { ...S.water, on: v === "on" } });
-    else if (key === "hours") {
-      if (v === "any") S = await saveSettings({ activeHours: { ...S.activeHours, on: false } });
-      else { const [span, days] = v.split("|"), [a, b] = span.split("-"); S = await saveSettings({ activeHours: { on: true, start: a, end: b, days: days.split(",").map(Number) } }); }
-    }
-    jump();
-  });
+document.addEventListener("click", (e) => {
+  const seg = e.target.closest("[data-set] button");
+  if (seg) { const p = seg.parentElement.dataset.set, v = seg.dataset.v; return save(patchOf(p, /^\d+$/.test(v) ? +v : v)); }
+  const bl = e.target.closest("[data-b]");
+  if (bl) return save(bl.dataset.b === "off" ? { eyes: { blink: false } } : { eyes: { blink: true, blinkEvery: +bl.dataset.b } });
+  const mvb = e.target.closest("[data-mv]");
+  if (mvb) return save(mvb.dataset.mv === "off" ? { stretch: { on: false } } : { stretch: { on: true, move: mvb.dataset.mv } });
+  const sw = e.target.closest("[data-sw]"); if (sw) return save(patchOf(sw.dataset.sw, !get(sw.dataset.sw)));
+  const st = e.target.closest("[data-style]"); if (st) return save({ water: { style: st.dataset.style } });
+  const g = e.target.closest("[data-goal]"); if (g) return save({ water: { goal: Math.max(3, Math.min(16, S.water.goal + +g.dataset.goal)) } });
+});
+$("#name").addEventListener("change", (e) => save({ name: e.target.value.trim().slice(0, 24) }));
+$("#back").addEventListener("click", () => go(step - 1));
+$("#next").addEventListener("click", async () => {
+  if (step === 0) await save({ name: $("#name").value.trim().slice(0, 24) });
+  if (step < steps.length - 1) return go(step + 1);
+  await send({ t: "save", patch: { on: true } });
+  try { const t = await chrome.tabs.getCurrent(); if (t) chrome.tabs.remove(t.id); else window.close(); } catch { window.close(); }
 });
 
-$("next").onclick = () => (i === steps.length - 1 ? finish() : show(i + 1));
-$("back").onclick = () => show(i - 1);
-addEventListener("keydown", (e) => { if (brk || e.target.closest?.("input,textarea")) return; if (e.key === "ArrowRight") show(i + 1); if (e.key === "ArrowLeft") show(i - 1); });
+// previews: the real thing, on this page
+$("#tryBlink").addEventListener("click", () => L.run({ t: "blink", force: true, theme: S.theme }));
+$("#tryEye").addEventListener("click", () => L.run({ t: "eye", id: "demo" + Date.now(), ex: "eight", dur: 12, force: true, theme: S.theme, sound: S.sound, name: S.name, kicker: "A little preview · 12 seconds" }));
+let mvi = 0;
+$("#tryStretch").addEventListener("click", () => { const kinds = ["stretch", "walk", "ball"], m = kinds.includes(S.stretch.move) ? S.stretch.move : kinds[mvi++ % 3];
+  L.run({ t: "stretch", move: m, force: true, ms: 7000, theme: S.theme, text: m === "stretch" ? "stretch a little :)" : m === "walk" ? "a brisk walk? :)" : "a little kickabout :)" }); });
+$("#tryWater").addEventListener("click", () => L.run({ t: "water", id: "demo" + Date.now(), style: S.water.style, theme: S.theme, sound: S.sound, glasses: 3, goal: S.water.goal, ...waterPrompt(3, S.water.goal, S.water.ml, S.hours) }));
+$("#me").addEventListener("click", () => { me.mood("happy"); setTimeout(() => me.mood(step === 4 ? "laugh" : "neutral"), 1100); });
 
-// live previews, right on this page
-let wave, brk;
-$("preview").onclick = () => {
-  if (wave) return;
-  const host = $("waterHost"), root = host.shadowRoot || host.attachShadow({ mode: "open" });
-  wave = BrinkyWater.start(root, { at: Date.now(), hold: 9000, glass: 1, goal: S.water.goal, sound: S.water.sound, volume: S.volume, from: "left", style: S.water.style, size: S.water.size, glassMl: S.water.glassMl, name: name() }, () => {});
-  wave.onEnd = () => { wave = null; };
-};
-$("tryBreak").onclick = () => {
-  if (brk) return;
-  const now = Date.now();
-  brk = BrinkyBreak.start(document.body, { endsAt: now + 10000, startedAt: now, kind: "short", name: name(), messages: lines(S.messages), breath: S.breath, look: "dark", lookAway: S.lookAway, holdToSkip: S.holdToSkip, sound: S.sound, volume: S.volume, primary: true }, () => { brk?.end(); brk = null; });
-};
-
-async function finish() {
-  if (name() !== (S.name || "")) S = await saveSettings({ name: name() });
-  await chrome.storage.sync.set({ welcomed: true });
-  try { await chrome.runtime.sendMessage({ t: "resume" }); } catch {} // the first countdown starts now
-  setBuddy("proud"); jump();
-  setTimeout(() => window.close(), 600);
-}
-
-show(0);
+const st = await send({ t: "state" });
+if (st?.settings) S = st.settings;
+$("#name").value = S.name || "";
+paint(); go(0);

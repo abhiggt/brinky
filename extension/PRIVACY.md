@@ -1,13 +1,7 @@
-# Brinky privacy policy
+# Privacy
 
-Brinky runs entirely in your browser. It has no server, no analytics and no account.
+Brinky has no server and sends nothing anywhere.
 
-**What it stores, locally:** your settings, including the name you give Brinky if you choose to (in Chrome sync storage, so they follow your Chrome profile) and daily counts of breaks, glasses of water and rest minutes (in local storage on this computer, kept for 90 days). You can export or reset them from Settings.
+It stores, in your browser only: your settings, the name you give it (optional), and today's counts (glasses, eye breaks, stretches), SuperBrink presets, and up to 90 days of stats (counts only, such as glasses logged and breaks finished). Clear stats or reset everything any time from Settings → Data.
 
-**What it looks at, and why:**
-- *Keyboard activity on web pages:* only the time of the last keystroke, to avoid interrupting you mid-sentence. Keys themselves are never read or stored.
-- *Camera, microphone and screen-sharing use:* only whether a page currently has them live (yes/no), so Brinky stays quiet during calls. No audio, video or screen content is ever accessed.
-- *Tab addresses:* only to match your focus sites and call sites, and whether a tab is playing sound.
-- *Idle state:* whether you're at the computer, so breaks never start for no one.
-
-**Why "Read and change all your data on all websites":** Brinky draws its break screen and water reminder inside the pages you visit, which needs access to every site. It does not read page content or send anything anywhere.
+It needs access to all sites so it can draw the wave, the tumbler and eye breaks on the page you're looking at, and to notice a call tab that's playing audio so it can stay quiet. It never reads page content. The always-on script only remembers your pointer position and the time of your last key press, in that page, to place the tumbler and to avoid interrupting you mid-sentence.

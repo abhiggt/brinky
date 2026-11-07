@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Brinky settings</title>
+<link rel="stylesheet" href="settings.css">
+</head>
+<body>
+<div class="device">
+  <header class="bar">
+    <div class="mark"><span id="mface"></span><b>Brinky</b><span class="dim">Settings</span></div>
+    <div class="status" id="status" role="status" aria-live="polite"><i class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 12.5l4 4 8-9"/></svg></i><span>All changes saved</span></div>
+    <button class="sbkey" id="sbkey" aria-pressed="false" title="SuperBrink: fine-tune every value"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg><span>SuperBrink</span></button>
+  </header>
+  <div class="rack">
+    <nav class="index" id="index" aria-label="Settings sections"></nav>
+    <main id="mods"></main>
+  </div>
+  <footer class="credit"><span>Made by <a href="https://github.com/abhiggt" target="_blank" rel="noopener">Abhijeet</a></span><span class="dim">Drink. Blink. Be in sync.</span></footer>
+</div>
+<script src="env-local.js"></script>
+<script src="pointer.js"></script>
+<script src="exercises.js"></script>
+<script src="face.js"></script>
+<script src="layer.js"></script>
+<script type="module" src="settings.js"></script>
+</body>
+</html>

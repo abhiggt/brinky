@@ -1,0 +1,63 @@
+/* Brinky's brand, shared by the popup, the walkthrough and the settings page.
+   Light paper and soft ink, and one blue: the colour of Brinky himself. One calm, round typeface, Figtree.
+   No gradients and no glass in the interface; Brinky is the only rendered thing on screen. */
+@font-face{font-family:"Figtree";src:url(fonts/figtree.woff2) format("woff2");font-weight:300 900;font-style:normal;font-display:block}
+@font-face{font-family:"Figtree";src:url(fonts/figtree-italic.woff2) format("woff2");font-weight:300 900;font-style:italic;font-display:block}
+:root{
+  --paper:#F7F6F2;--paper-2:#F0EEE8;--card:#FFFFFF;
+  --ink:#15171B;--ink-2:#4A4D55;--ink-3:#8A8C92;--line:rgba(21,23,27,.1);--line-2:rgba(21,23,27,.18);
+  --blue:#1E8FF2;--blue-soft:rgba(30,143,242,.12);--red:#D9483B;
+  --serif:"Figtree",-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  --sans:"Figtree",-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  --mono:"Geist Mono",ui-monospace,Menlo,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#121316;--paper-2:#18191D;--card:#1D1E23;
+  --ink:#F1EEE7;--ink-2:#B3B0A9;--ink-3:#7E7C77;--line:rgba(241,238,231,.1);--line-2:rgba(241,238,231,.2);
+  --blue:#3EA2FF;--blue-soft:rgba(62,162,255,.14);color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#121316;--paper-2:#18191D;--card:#1D1E23;
+  --ink:#F1EEE7;--ink-2:#B3B0A9;--ink-3:#7E7C77;--line:rgba(241,238,231,.1);--line-2:rgba(241,238,231,.2);
+  --blue:#3EA2FF;--blue-soft:rgba(62,162,255,.14);color-scheme:dark}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--paper)}
+body{color:var(--ink);font:14.5px/1.5 var(--sans);-webkit-font-smoothing:antialiased;letter-spacing:-.006em}
+button{all:unset;box-sizing:border-box;cursor:pointer}
+img,svg{display:block;max-width:100%}
+:focus-visible{outline:2px solid var(--blue);outline-offset:3px;border-radius:10px}
+.serif{font-family:var(--sans);font-weight:600;letter-spacing:-.03em}
+.eyebrow{font:500 11px/1 var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+.sub{color:var(--ink-3)}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:38px;padding:0 16px;border-radius:999px;font:500 14px/1 var(--sans);white-space:nowrap;transition:transform .2s,box-shadow .2s,background .2s}
+.btn:hover{transform:translateY(-1px)}
+.btn:active{transform:none}
+.btn svg{width:14px;height:14px}
+.btn.ink,.btn.primary{background:var(--ink);color:var(--paper)}
+.btn.line,.btn.tint{box-shadow:inset 0 0 0 1px var(--line-2);color:var(--ink)}
+.btn.line:hover,.btn.tint:hover{box-shadow:inset 0 0 0 1px var(--ink)}
+.btn.plain{height:auto;padding:4px 0;color:var(--ink-2)}
+.btn.lg{height:46px;padding:0 22px;font-size:15px}
+.round{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:var(--ink-2);box-shadow:inset 0 0 0 1px var(--line);transition:box-shadow .2s,color .2s}
+.round:hover{color:var(--ink);box-shadow:inset 0 0 0 1px var(--line-2)}
+.round svg{width:16px;height:16px}
+
+/* on / off: a pill with a dot */
+.tg,.sw{display:inline-flex;align-items:center;gap:8px;min-width:64px;height:30px;padding:0 13px 0 11px;border-radius:999px;font:500 13px/1 var(--sans);color:var(--ink-3);box-shadow:inset 0 0 0 1px var(--line-2);flex:none;transition:background .25s,color .25s,box-shadow .25s}
+.tg::before,.sw::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.5;transition:opacity .25s}
+.sw::after{content:"Off"}
+.tg[aria-pressed="true"],.sw[aria-checked="true"]{background:var(--ink);color:var(--paper);box-shadow:none}
+.tg[aria-pressed="true"]::before,.sw[aria-checked="true"]::before{background:var(--blue);opacity:1}
+.sw[aria-checked="true"]::after{content:"On"}
+
+/* one of several */
+.seg{display:inline-flex;padding:3px;border-radius:999px;box-shadow:inset 0 0 0 1px var(--line-2);gap:2px}
+.seg button{height:28px;padding:0 12px;display:grid;place-items:center;border-radius:999px;font:500 13px/1 var(--sans);color:var(--ink-2);transition:background .2s,color .2s}
+.seg button:hover{color:var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+
+.card{background:var(--card);border-radius:20px;box-shadow:0 0 0 1px var(--line)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
